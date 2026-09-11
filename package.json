@@ -1,0 +1,20 @@
+{
+  "name": "pathtracer-webgl",
+  "private": true,
+  "version": "0.1.0",
+  "description": "WebGL2 path tracer: a self-written GPU path tracing core (BVH, NEE, progressive rendering) on top of a three.js scene layer.",
+  "license": "MIT",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "three": "^0.185.1",
+    "tweakpane": "^3.1.10"
+  },
+  "devDependencies": {
+    "vite": "^8.2.2"
+  }
+}
