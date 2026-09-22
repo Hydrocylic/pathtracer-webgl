@@ -1,0 +1,25 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "useDefineForClassFields": true,
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "noEmit": true,
+    "jsx": "react-jsx",
+
+    "strict": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noFallthroughCasesInSwitch": true,
+
+    "skipLibCheck": true,
+    "types": ["vite/client", "node"]
+    // 注意: 不要加回 "paths": { "@core/*": [...] }——它会把说明符解析到真实存在的 app/src/*.js，
+    // 遮蔽 src/types/kernel.d.ts 的 declare module（TS7016 ×8，r20 回修 F-C）。
+    // 运行时解析靠 vite.config.ts 的 alias；类型靠 kernel.d.ts（plan D1/P2）。
+  },
+  "include": ["src", "vite.config.ts"]
+}

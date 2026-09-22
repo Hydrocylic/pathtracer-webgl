@@ -14,8 +14,8 @@ uniform vec4 uObjects[8];
 uniform vec4 uAlbedos[8];
 uniform vec4 uEmissions[8];
 uniform int uObjectCount;
-uniform vec4 uLightQuads[16];
-uniform vec4 uLightQuadEmissions[4];
+uniform vec4 uLightQuads[32];
+uniform vec4 uLightQuadEmissions[8];
 uniform int uLightQuadCount;
 uniform sampler2D uBvhBoundsTex;
 uniform usampler2D uBvhContentsTex;
@@ -311,7 +311,7 @@ bool intersectScene(Ray ray, inout Hit h) {
   bool hitTri = (uUseBvh == 1) ? intersectBVH(ray, h, dummySteps) : intersectTrianglesLinear(ray, h);
 
   bool hitQuad = false;
-  for (int i = 0; i < 4; i++) {
+  for (int i = 0; i < 8; i++) {
     if (i >= uLightQuadCount) break;
     vec4 c0 = uLightQuads[i * 4];
     vec4 c1 = uLightQuads[i * 4 + 1];
@@ -409,7 +409,7 @@ vec3 tracePath(Ray ray, vec2 rng) {
     } else {
 
       if (uUseNee == 1) {
-        for (int li = 0; li < 4; li++) {
+        for (int li = 0; li < 8; li++) {
           if (li >= uLightQuadCount) break;
           vec2 lrng = vec2(hash13(vec3(rng, 5.0 + float(li))), hash13(vec3(rng, 9.0 + float(li))));
           radiance += throughput * sampleQuadLight(pos, h.normal, h.albedo, lrng, li);

@@ -51,7 +51,7 @@ const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerH
 const controls = new OrbitControls(camera, canvas);
 
 const MAX_OBJECTS = 8;
-const MAX_LIGHT_QUADS = 4;
+const MAX_LIGHT_QUADS = 8;
 const sceneBundles = {};
 
 const trisParam = new URLSearchParams(window.location.search).get('tris');
@@ -260,11 +260,11 @@ layout(location = 0) out highp vec4 pc_fragColor;
 uniform sampler2D uFTex;
 uniform usampler2D uUTex;
 uniform int uIndex;
-uniform int uMode;
+uniform int uMode; // 0 = 浮点纹理, 1 = uint 纹理
 void main() {
   if (uMode == 1) {
     ivec2 uv = ivec2(uIndex % int(textureSize(uUTex, 0).x), uIndex / int(textureSize(uUTex, 0).x));
-    pc_fragColor = vec4(texelFetch(uUTex, uv, 0));
+    pc_fragColor = vec4(texelFetch(uUTex, uv, 0)); // uint → float 显示（>2^24 的值会舍入——比对侧用 fround 对齐）
   } else {
     ivec2 uv = ivec2(uIndex % int(textureSize(uFTex, 0).x), uIndex / int(textureSize(uFTex, 0).x));
     pc_fragColor = texelFetch(uFTex, uv, 0);
@@ -386,9 +386,10 @@ const cameraPanel = addCameraInputs(pane, camera, controls, resetAccumulation);
 cameraPanelSync = cameraPanel.syncFromCamera;
 pane.addInput(uniforms.uUseNee, 'value', { min: 0, max: 1, step: 1, label: 'NEE(1)/随机(0)' }).on('change', resetAccumulation);
 pane.addMonitor(perf, 'frameMs', { readonly: true, interval: 200, label: 'frame ms (1s 平滑)' });
-pane.addInput(uniforms.uBackground.value, 'r', { min: 0, max: 1, label: 'bg.r' }).on('change', resetAccumulation);
-pane.addInput(uniforms.uBackground.value, 'g', { min: 0, max: 1, label: 'bg.g' }).on('change', resetAccumulation);
-pane.addInput(uniforms.uBackground.value, 'b', { min: 0, max: 1, label: 'bg.b' }).on('change', resetAccumulation);
+
+pane.addInput(uniforms.uBackground.value, 'r', { min: 0, max: 4, label: 'bg.r' }).on('change', resetAccumulation);
+pane.addInput(uniforms.uBackground.value, 'g', { min: 0, max: 4, label: 'bg.g' }).on('change', resetAccumulation);
+pane.addInput(uniforms.uBackground.value, 'b', { min: 0, max: 4, label: 'bg.b' }).on('change', resetAccumulation);
 
 window.addEventListener('resize', () => {
   camera.aspect = window.innerWidth / window.innerHeight;

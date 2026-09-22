@@ -118,12 +118,18 @@ const sponza = {
     target: [-10.0, 5.0, 0.0],
     fov: 60,
   },
-  background: [0.0, 0.0, 0.0],
+  background: [1.2, 1.5, 2.0],
+
   meshes: [],
   objects: [],
   lightQuads: [
 
-    { type: 'quadLight', corners: [[-6.0, 11.6, -1.0], [6.0, 11.6, -1.0], [6.0, 11.6, 1.0], [-6.0, 11.6, 1.0]], emission: [4.0, 3.6, 3.2] },
+    { type: 'quadLight', corners: [[-6.0, 11.6, -1.0], [6.0, 11.6, -1.0], [6.0, 11.6, 1.0], [-6.0, 11.6, 1.0]], emission: [10.0, 9.0, 8.0] },
+
+    { type: 'quadLight', corners: [[11.5, 0.5, 5.6], [11.5, 0.5, 8.4], [11.5, 10.5, 8.4], [11.5, 10.5, 5.6]], emission: [1.2, 1.5, 2.0] },
+    { type: 'quadLight', corners: [[-12.3, 0.5, 8.4], [-12.3, 0.5, 5.6], [-12.3, 10.5, 5.6], [-12.3, 10.5, 8.4]], emission: [1.2, 1.5, 2.0] },
+
+    { type: 'quadLight', corners: [[-1.0, 10.7, 6.4], [1.0, 10.7, 6.4], [1.0, 10.7, 7.6], [-1.0, 10.7, 7.6]], emission: [0.6, 0.5, 0.4] },
   ],
   maxBounces: 8,
 
@@ -181,6 +187,7 @@ const GLTF_SCENES = [
   { name: 'box', file: 'gltf/Box/glTF/Box.gltf' },
   { name: 'duck', file: 'gltf/Duck/glTF/Duck.gltf' },
   { name: 'avocado', file: 'gltf/Avocado/glTF/Avocado.gltf' },
+  { name: 'damagedhelmet', file: 'gltf/DamagedHelmet/glTF/DamagedHelmet.gltf' },
   { name: 'lantern', file: 'gltf/Lantern/glTF/Lantern.gltf' },
   { name: 'boombox', file: 'gltf/BoomBox/glTF/BoomBox.gltf' },
 ];
