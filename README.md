@@ -4,7 +4,7 @@ A GPU path tracer that runs entirely in the browser. The scene layer is built on
 **path-tracing core is written from scratch** — BVH build and GPU traversal, direct light sampling,
 materials, and progressive accumulation, all in WebGL2 + GLSL ES 3.00.
 
-**Live demo**: _pending — GitHub Pages publish in progress_　**Portfolio entry**: _pending_
+**Live demo**: <https://hydrocylic.github.io/pathtracer-webgl/>　**Source**: <https://github.com/Hydrocylic/pathtracer-webgl>
 
 > 中文摘要：浏览器内的 **WebGL2 路径追踪渲染器**。场景管理层用 three.js，渲染内核自研（BVH 构建与 GPU 遍历、
 > 直接光采样、材质、渐进累积）。本仓根目录是内核（JS）与旧入口，**`web/` 是 TypeScript + React 展示层**。

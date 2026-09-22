@@ -133,7 +133,7 @@ const sponza = {
   ],
   maxBounces: 8,
 
-  load: () => loadSponzaTriangles('/sponza/Sponza.gltf'),
+  load: () => loadSponzaTriangles('sponza/Sponza.gltf'),
 };
 
 export function autoGltfSceneConfig(tris) {
@@ -200,7 +200,7 @@ const gltfSceneEntries = Object.fromEntries(GLTF_SCENES.map(({ name, file }) => 
   lightQuads: [],
   maxBounces: 8,
   load: async () => {
-    const { tris, texImages } = await loadGltfTriangles(`/${file}`);
+    const { tris, texImages } = await loadGltfTriangles(file);
     return { tris, texImages, scene: autoGltfSceneConfig(tris) };
   },
 }]));
