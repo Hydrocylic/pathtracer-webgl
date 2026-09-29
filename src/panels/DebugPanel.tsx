@@ -1,5 +1,5 @@
 
-import { DEBUG_MODES } from '@core/debug/debug-modes.js';
+import { DEBUG_MODES } from '../kernel/debug/debug-modes';
 import { t, type MessageKey } from '../i18n';
 import { getEngine, useUi } from '../state/store';
 

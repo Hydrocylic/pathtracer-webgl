@@ -1,6 +1,6 @@
 
 import * as THREE from 'three';
-import vertShader from '@core/shaders/fullscreen.vert.glsl?raw';
+import vertShader from '../kernel/shaders/fullscreen.vert.glsl?raw';
 import type { SceneBundle } from '../engine/bundle';
 
 export interface ProbeDeps {

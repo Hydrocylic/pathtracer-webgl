@@ -1,51 +1,54 @@
 
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
+import type { GLTF } from 'three/examples/jsm/loaders/GLTFLoader.js';
+import type { Triangle, TexImage } from '../renderer/bvh';
 
 export const ATLAS_LAYOUT = { GRID: 8, CELL: 256, PAD: 1, ATLAS: 8 * 256, CELLS_PER_ATLAS: 64, COUNT: 2 };
 
-export async function loadGltfTriangles(url) {
+export async function loadGltfTriangles(url: string): Promise<{ tris: Triangle[]; texImages: TexImage[] }> {
   const gltf = await new GLTFLoader().loadAsync(url);
   return extractSponzaTriangles(gltf);
 }
 
-export async function loadSponzaTriangles(url) {
+export async function loadSponzaTriangles(url: string): Promise<{ tris: Triangle[]; texImages: TexImage[] }> {
   return loadGltfTriangles(url);
 }
 
-export async function extractSponzaTriangles(gltf) {
+export async function extractSponzaTriangles(gltf: GLTF): Promise<{ tris: Triangle[]; texImages: TexImage[] }> {
   gltf.scene.updateMatrixWorld(true);
-  const tris = [];
-  const texLayerMap = new Map();
-  const texImages = [];
-  const albedoPromises = [];
+  const tris: Triangle[] = [];
+  const texLayerMap = new Map<THREE.Texture, number>();
+  const texImages: TexImage[] = [];
+  const albedoPromises: Array<{ start: number; end: number; promise: Promise<number[]> }> = [];
   gltf.scene.traverse((node) => {
-    if (!node.isMesh) return;
-    const geo = node.geometry;
+    if (!(node as THREE.Mesh).isMesh) return;
+    const mesh = node as THREE.Mesh;
+    const geo = mesh.geometry;
     const pos = geo.attributes.position;
     const nor = geo.attributes.normal;
     const uv = geo.attributes.uv;
     const idx = geo.index ? geo.index.array : null;
     const count = idx ? idx.length : pos.count;
-    const mat = node.material;
+    const mat = mesh.material as THREE.MeshStandardMaterial;
     const m = node.matrixWorld;
 
     const normalMat = new THREE.Matrix3().getNormalMatrix(m);
 
-    const v = (k) =>
+    const v = (k: number) =>
       new THREE.Vector3(pos.getX(k), pos.getY(k), pos.getZ(k)).applyMatrix4(m);
 
     const n = nor
-      ? (k) => new THREE.Vector3(nor.getX(k), nor.getY(k), nor.getZ(k)).applyMatrix3(normalMat).normalize()
+      ? (k: number) => new THREE.Vector3(nor.getX(k), nor.getY(k), nor.getZ(k)).applyMatrix3(normalMat).normalize()
       : null;
 
     let texLayer = -1;
     if (mat.map && mat.map.image) {
       if (!texLayerMap.has(mat.map)) {
         texLayerMap.set(mat.map, texImages.length);
-        texImages.push(mat.map.image);
+        texImages.push(mat.map.image as TexImage);
       }
-      texLayer = texLayerMap.get(mat.map);
+      texLayer = texLayerMap.get(mat.map)!;
     }
 
     const cellIdx = texLayer % ATLAS_LAYOUT.CELLS_PER_ATLAS;
@@ -54,13 +57,13 @@ export async function extractSponzaTriangles(gltf) {
     const inner = ATLAS_LAYOUT.CELL - 2 * ATLAS_LAYOUT.PAD;
     const wrapU = mat.map?.wrapS === THREE.ClampToEdgeWrapping;
     const wrapV = mat.map?.wrapT === THREE.ClampToEdgeWrapping;
-    const toAtlasU = (u) => (cellCol * ATLAS_LAYOUT.CELL + ATLAS_LAYOUT.PAD + (wrapU ? Math.min(Math.max(u, 0.0), 1.0) : u - Math.floor(u)) * inner) / ATLAS_LAYOUT.ATLAS;
-    const toAtlasV = (v) => (cellRow * ATLAS_LAYOUT.CELL + ATLAS_LAYOUT.PAD + (wrapV ? Math.min(Math.max(v, 0.0), 1.0) : v - Math.floor(v)) * inner) / ATLAS_LAYOUT.ATLAS;
+    const toAtlasU = (u: number) => (cellCol * ATLAS_LAYOUT.CELL + ATLAS_LAYOUT.PAD + (wrapU ? Math.min(Math.max(u, 0.0), 1.0) : u - Math.floor(u)) * inner) / ATLAS_LAYOUT.ATLAS;
+    const toAtlasV = (v: number) => (cellRow * ATLAS_LAYOUT.CELL + ATLAS_LAYOUT.PAD + (wrapV ? Math.min(Math.max(v, 0.0), 1.0) : v - Math.floor(v)) * inner) / ATLAS_LAYOUT.ATLAS;
     for (let i = 0; i < count; i += 3) {
       const i0 = idx ? idx[i] : i;
       const i1 = idx ? idx[i + 1] : i + 1;
       const i2 = idx ? idx[i + 2] : i + 2;
-      const tri = { v0: v(i0), v1: v(i1), v2: v(i2), albedo: null, matType: 0, texLayer };
+      const tri: Triangle = { v0: v(i0), v1: v(i1), v2: v(i2), albedo: null, matType: 0, texLayer };
 
       if (n) {
         const n0 = n(i0);

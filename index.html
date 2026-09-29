@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>pathtracer-webgl</title>
+  <title>webgl-path-tracer</title>
 
   <link rel="icon" href="data:," />
   <style>
@@ -23,13 +23,11 @@
       right: 8px;
       z-index: 1000;
     }
-    #pane-container .tp-dfwv {
-      position: static !important;
-    }
   </style>
 </head>
 <body>
   <canvas id="canvas"></canvas>
-  <script type="module" src="/src/main.js"></script>
+  <div id="pane-container"></div>
+  <script type="module" src="/src/main.tsx"></script>
 </body>
 </html>

@@ -1,18 +1,71 @@
 
 import * as THREE from 'three';
-import { ATLAS_LAYOUT } from '../scene/sponza-loader.js';
+import { ATLAS_LAYOUT } from '../scene/sponza-loader';
+import type { MeshDecl } from '../scene';
+
+export interface Triangle {
+  v0: THREE.Vector3;
+  v1: THREE.Vector3;
+  v2: THREE.Vector3;
+  albedo: number[] | null;
+  matType: number;
+  ns?: Float32Array;
+  uvs?: Float32Array;
+  texLayer?: number;
+}
+
+export type TexImage = ImageBitmap | HTMLImageElement;
+
+export interface BvhTextures {
+  boundsTexture: THREE.DataTexture;
+  contentsTexture: THREE.DataTexture;
+  positionTexture: THREE.DataTexture;
+  normalTexture: THREE.DataTexture;
+  uvTexture: THREE.DataTexture;
+  indexTexture: THREE.DataTexture;
+  triInfoTexture: THREE.DataTexture;
+  atlasTextures: THREE.DataTexture[];
+  nodeCount: number;
+  vertexCount: number;
+  triCount: number;
+  maxDepth: number;
+  costSum: number;
+  leafHistogram: number[];
+}
+
+export interface BuildBvhTexturesOptions {
+  texImages?: TexImage[] | null;
+  strategy?: 'median' | 'sah';
+}
+
+export interface BvhNode {
+  min: number[];
+  max: number[];
+  leftFirst: number;
+  rightFirst: number;
+  triCount: number;
+  splitAxis: number;
+}
+
+export interface BvhBuildResult {
+  nodes: BvhNode[];
+  order: number[];
+  maxDepth: number;
+  costSum: number;
+  leafHistogram: number[];
+}
 
 const LEAF_SIZE = 4;
 const MAX_DEPTH = 32;
 const SAH_BINS = 16;
 
-export const MAT_TYPES = { lambert: 0, mirror: 1, glass: 2 };
+export const MAT_TYPES: Record<string, number> = { lambert: 0, mirror: 1, glass: 2 };
 
-export function materializeTriangles(meshes) {
-  const tris = [];
+export function materializeTriangles(meshes: MeshDecl[]): Triangle[] {
+  const tris: Triangle[] = [];
   for (const mesh of meshes) {
-    const albedo = mesh.material.color;
-    const matType = MAT_TYPES[mesh.material.type] ?? 0;
+    const albedo = mesh.material.color ?? null;
+    const matType = MAT_TYPES[mesh.material.type!] ?? 0;
     if (mesh.type === 'quad') {
 
       const { a, b, c, d } = mesh.corners;
@@ -48,7 +101,7 @@ export function materializeTriangles(meshes) {
   return tris;
 }
 
-function vertex(pos, k, center) {
+function vertex(pos: THREE.BufferAttribute | THREE.InterleavedBufferAttribute, k: number, center: [number, number, number]) {
   return new THREE.Vector3(
     pos.getX(k) + center[0],
     pos.getY(k) + center[1],
@@ -56,12 +109,12 @@ function vertex(pos, k, center) {
   );
 }
 
-function flatNs(a, b, c) {
+function flatNs(a: THREE.Vector3, b: THREE.Vector3, c: THREE.Vector3) {
   const n = b.clone().sub(a).cross(c.clone().sub(a)).normalize();
   return Float32Array.from([n.x, n.y, n.z, n.x, n.y, n.z, n.x, n.y, n.z]);
 }
 
-export function buildBVH(triangles, strategy = 'median') {
+export function buildBVH(triangles: Triangle[], strategy: 'median' | 'sah' = 'median'): BvhBuildResult {
   const n = triangles.length;
   const centroids = new Float32Array(n * 3);
   const bounds = new Float32Array(n * 6);
@@ -81,12 +134,12 @@ export function buildBVH(triangles, strategy = 'median') {
   }
 
   const order = Array.from({ length: n }, (_, i) => i);
-  const nodes = [];
+  const nodes: BvhNode[] = [];
   let maxDepth = 0;
   let costSum = 0;
   const leafHistogram = [0, 0, 0, 0, 0, 0];
 
-  function boxArea(mn, mx) {
+  function boxArea(mn: number[], mx: number[]) {
     const dx = mx[0] - mn[0];
     const dy = mx[1] - mn[1];
     const dz = mx[2] - mn[2];
@@ -94,7 +147,7 @@ export function buildBVH(triangles, strategy = 'median') {
 
   }
 
-  function medianSplit(rangeStart, rangeEnd, mn, mx) {
+  function medianSplit(rangeStart: number, rangeEnd: number, mn: number[], mx: number[]) {
     const ext = [mx[0] - mn[0], mx[1] - mn[1], mx[2] - mn[2]];
     let axis = ext[0] > ext[1] ? 0 : 1;
     axis = ext[axis] > ext[2] ? axis : 2;
@@ -107,7 +160,7 @@ export function buildBVH(triangles, strategy = 'median') {
     return { mid, axis };
   }
 
-  function sahSplit(rangeStart, rangeEnd) {
+  function sahSplit(rangeStart: number, rangeEnd: number): { mid: number; axis: number } | null {
     const count = rangeEnd - rangeStart;
     const binCount = new Int32Array(SAH_BINS);
     const binMin = new Float32Array(SAH_BINS * 3);
@@ -195,7 +248,7 @@ export function buildBVH(triangles, strategy = 'median') {
     return { mid: i, axis: bestAxis };
   }
 
-  function build(rangeStart, rangeEnd, depth) {
+  function build(rangeStart: number, rangeEnd: number, depth: number) {
     maxDepth = Math.max(maxDepth, depth);
 
     const mn = [Infinity, Infinity, Infinity];
@@ -215,7 +268,7 @@ export function buildBVH(triangles, strategy = 'median') {
     const count = rangeEnd - rangeStart;
     if (count > LEAF_SIZE && depth < MAX_DEPTH) {
 
-      let split = null;
+      let split: { mid: number; axis: number } | null = null;
       if (strategy === 'sah') split = sahSplit(rangeStart, rangeEnd);
       if (split === null) split = medianSplit(rangeStart, rangeEnd, mn, mx);
 
@@ -234,7 +287,7 @@ export function buildBVH(triangles, strategy = 'median') {
   return { nodes, order, maxDepth, costSum, leafHistogram };
 }
 
-function makeFloatTexture(data, dimension, internalFormat) {
+function makeFloatTexture(data: Float32Array, dimension: number, internalFormat: THREE.PixelFormatGPU) {
   const texture = new THREE.DataTexture(data, dimension, dimension, THREE.RGBAFormat, THREE.FloatType);
   texture.internalFormat = internalFormat;
   texture.minFilter = THREE.NearestFilter;
@@ -247,7 +300,7 @@ function makeFloatTexture(data, dimension, internalFormat) {
   return texture;
 }
 
-function makeUintTexture(data, dimension, internalFormat, format) {
+function makeUintTexture(data: Uint32Array, dimension: number, internalFormat: THREE.PixelFormatGPU, format: THREE.PixelFormat) {
   const texture = new THREE.DataTexture(data, dimension, dimension, format, THREE.UnsignedIntType);
   texture.internalFormat = internalFormat;
   texture.minFilter = THREE.NearestFilter;
@@ -260,7 +313,7 @@ function makeUintTexture(data, dimension, internalFormat, format) {
   return texture;
 }
 
-export function buildBVHTextures(triangles, options = {}) {
+export function buildBVHTextures(triangles: Triangle[], options: BuildBvhTexturesOptions = {}): BvhTextures {
 
   const { nodes, order, maxDepth, costSum, leafHistogram } = buildBVH(
     triangles,
@@ -269,10 +322,10 @@ export function buildBVHTextures(triangles, options = {}) {
 
   const n = triangles.length;
 
-  const vMap = new Map();
-  const posFloats = [];
-  const normFloats = [];
-  const uvFloats = [];
+  const vMap = new Map<string, number>();
+  const posFloats: number[] = [];
+  const normFloats: number[] = [];
+  const uvFloats: number[] = [];
   const triIndices = new Uint32Array(n * 3);
   for (let i = 0; i < n; i++) {
     const t = triangles[order[i]];
@@ -346,14 +399,14 @@ export function buildBVHTextures(triangles, options = {}) {
   for (let i = 0; i < n; i++) {
     const t = triangles[order[i]];
     const o = i * 8;
-    infoFloats[o] = t.albedo[0];
-    infoFloats[o + 1] = t.albedo[1];
-    infoFloats[o + 2] = t.albedo[2];
+    infoFloats[o] = t.albedo![0];
+    infoFloats[o + 1] = t.albedo![1];
+    infoFloats[o + 2] = t.albedo![2];
     infoFloats[o + 3] = t.matType;
     infoFloats[o + 4] = t.texLayer ?? -1.0;
   }
 
-  const atlasTextures = [];
+  const atlasTextures: THREE.DataTexture[] = [];
   const texImages = options.texImages;
   if (texImages?.length) {
     const { GRID, CELL, PAD, ATLAS, CELLS_PER_ATLAS, COUNT } = ATLAS_LAYOUT;
@@ -361,7 +414,7 @@ export function buildBVHTextures(triangles, options = {}) {
       const canvas = document.createElement('canvas');
       canvas.width = ATLAS;
       canvas.height = ATLAS;
-      const ctx = canvas.getContext('2d');
+      const ctx = canvas.getContext('2d')!;
       texImages.forEach((img, k) => {
 
         if (!img || Math.floor(k / CELLS_PER_ATLAS) !== a) return;

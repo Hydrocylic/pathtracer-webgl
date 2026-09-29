@@ -7,7 +7,8 @@ materials, and progressive accumulation, all in WebGL2 + GLSL ES 3.00.
 **Live demo**: <https://hydrocylic.github.io/pathtracer-webgl/>　**Source**: <https://github.com/Hydrocylic/pathtracer-webgl>
 
 > 中文摘要：浏览器内的 **WebGL2 路径追踪渲染器**。场景管理层用 three.js，渲染内核自研（BVH 构建与 GPU 遍历、
-> 直接光采样、材质、渐进累积）。本仓根目录是内核（JS）与旧入口，**`web/` 是 TypeScript + React 展示层**。
+> 直接光采样、材质、渐进累积）。**整个仓库就是一个 TypeScript + Vite 工程**：内核在 `src/kernel/**`，
+> 外壳与面板在 `src/**` 其余目录。
 
 ![cover](docs/cover.webp)
 
@@ -17,21 +18,14 @@ materials, and progressive accumulation, all in WebGL2 + GLSL ES 3.00.
 - **Hand-written BVH** build (median split) and GPU traversal — no third-party ray-tracing library
 - **Next-event estimation** for analytic quad lights; Lambert / mirror / glass materials
 - Debug views: normals / albedo / hit distance / escape / traversal steps
-- **TypeScript + React shell** (`web/`) driving the JS core through a typed, narrow interface (zh/en UI)
+- **TypeScript throughout** — kernel and shell live in one Vite project (`src/kernel/**` + `src/**`), driving the UI through a typed, narrow interface (zh/en)
 
 ## Quick start
 
 ```bash
-# core + legacy entry (repository root)
 npm install
 npm run dev          # http://localhost:5173
-npm run build
-
-# TypeScript + React shell
-cd web
-npm install
-npm run dev          # http://localhost:5174
-npm run build        # -> web/dist
+npm run build        # -> dist/
 ```
 
 Requirements: Node ≥ 20 and a browser with **WebGL2**.
@@ -40,22 +34,30 @@ Requirements: Node ≥ 20 and a browser with **WebGL2**.
 
 | Path | Responsibility |
 |---|---|
-| `src/renderer/bvh.js` | BVH build (median split) + packing into GPU textures |
-| `src/shaders/pathtrace.frag.glsl` | Path tracing core: BVH traversal, NEE, materials, accumulation |
-| `src/shaders/composite.frag.glsl` | Display pass (gamma) |
-| `src/scene.js`, `src/scene/` | Scene definitions + glTF materialization |
-| `src/main.js` | Legacy entry: render loop, bundles, uniform upload, Tweakpane panels |
-| `web/` | TypeScript + React shell: scene / parameter / debug / camera / status / environment panels |
+| `src/kernel/renderer/bvh.ts` | BVH build + packing into GPU textures |
+| `src/kernel/shaders/pathtrace.frag.glsl` | Path tracing core: BVH traversal, NEE, materials, accumulation |
+| `src/kernel/shaders/composite.frag.glsl` | Display pass (gamma) |
+| `src/kernel/scene.ts`, `src/kernel/scene/` | Scene definitions + glTF materialization |
+| `src/kernel/debug/debug-modes.ts` | Debug mode table |
+| `src/engine/**` | Engine adapter: narrow typed interface used by the UI |
+| `src/panels/`, `src/state/`, `src/i18n/` | React panels, store, zh/en messages |
 | `public/` | Sponza + sample glTF assets |
 
 Data flow: scene config → glTF materialization → BVH + attribute textures → `pathtrace` fragment
 shader → ping-pong accumulation → display pass.
 
+## Public build profile
+
+The deployed demo runs a **public profile** (`src/engine/product-profile.ts`), which differs from the
+study build only in configuration: scene whitelist = `cornell` + `sponza`, default scene = `cornell`
+(opens instantly with no asset wait), Sponza loads **on demand** and is prefetched when idle, and the
+`?gltf=` diagnostic entry is disabled.
+
 ## Key decisions
 
-1. **Shell and core are separate** — the render core stays plain JS with `.d.ts` types; the shell is
-   TypeScript + React. Rewriting the shell does not touch the core, and image equality can be checked
-   numerically instead of by eye.
+1. **One project, typed throughout** — the render core is TypeScript in `src/kernel/**`; the UI drives
+   it through a narrow interface, so shell changes cannot touch the core and image equality can be
+   checked numerically instead of by eye.
 2. **TDR handled by a load-shedding combo** — tracing 262k triangles per pixel tripped the GPU watchdog
    (TDR); mitigated by `textureLod` sampling + **2×2 tiled rendering** + a **66 ms frame cap**.
 3. **Observable and reproducible** — GPU texture read-back probes; local headless capture with PSNR

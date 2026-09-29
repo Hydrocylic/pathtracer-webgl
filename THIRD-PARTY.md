@@ -33,9 +33,14 @@ Not bundled: `DamagedHelmet` (by theblueturtle_, on Sketchfab) is licensed
 
 | Package | Version | License |
 |---|---|---|
+| react | ^19.1.0 | MIT |
+| react-dom | ^19.1.0 | MIT |
 | three.js | ^0.185.1 | MIT |
 | tweakpane | ^3.1.10 | MIT |
 | vite (dev) | ^8.2.2 | MIT |
+| @vitejs/plugin-react (dev) | ^5.0.0 | MIT |
+| typescript (dev) | ~5.9.0 | Apache-2.0 |
+| @types/* (dev) | ^24 / ^19 / ^0.185 | MIT (types only) |
 
 Installed via npm; no source is vendored into this repository.
 

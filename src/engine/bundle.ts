@@ -1,8 +1,8 @@
 
 import * as THREE from 'three';
-import { buildBVHTextures, MAT_TYPES } from '@core/renderer/bvh.js';
-import type { BvhTextures, TexImage, Triangle } from '@core/renderer/bvh.js';
-import type { SceneConfig } from '@core/scene.js';
+import { buildBVHTextures, MAT_TYPES } from '../kernel/renderer/bvh';
+import type { BvhTextures, TexImage, Triangle } from '../kernel/renderer/bvh';
+import type { SceneConfig } from '../kernel/scene';
 
 export const MAX_OBJECTS = 8;
 export const MAX_LIGHT_QUADS = 8;

@@ -1,7 +1,60 @@
 
-import { loadSponzaTriangles, loadGltfTriangles } from './scene/sponza-loader.js';
+import { loadSponzaTriangles, loadGltfTriangles } from './scene/sponza-loader';
+import type { Triangle, TexImage } from './renderer/bvh';
 
-const spheres = {
+export interface SceneMaterial {
+  color?: [number, number, number];
+  emission?: [number, number, number];
+  type?: string;
+}
+
+export interface QuadMeshDecl {
+  type: 'quad';
+  corners: { a: [number, number, number]; b: [number, number, number]; c: [number, number, number]; d: [number, number, number] };
+  material: SceneMaterial;
+}
+
+export interface SphereMeshDecl {
+  type: 'sphere';
+  center: [number, number, number];
+  radius: number;
+  segments: number;
+  material: SceneMaterial;
+}
+
+export type MeshDecl = QuadMeshDecl | SphereMeshDecl;
+
+export interface AnalyticSphere {
+  type: 'sphere';
+  center: [number, number, number];
+  radius: number;
+  material: SceneMaterial;
+}
+
+export interface LightQuad {
+  type: 'quadLight';
+  corners: [number, number, number][];
+  emission?: [number, number, number];
+}
+
+export interface SceneCamera {
+  position: [number, number, number];
+  target: [number, number, number];
+  fov: number;
+  near?: number;
+}
+
+export interface SceneConfig {
+  camera: SceneCamera;
+  background: [number, number, number];
+  meshes: MeshDecl[];
+  objects: AnalyticSphere[];
+  lightQuads?: LightQuad[];
+  maxBounces: number;
+  load?: () => Promise<{ tris: Triangle[]; texImages?: TexImage[]; scene?: Partial<SceneConfig> }>;
+}
+
+const spheres: SceneConfig = {
   camera: {
     position: [0.0, 2.5, 8.0],
     target: [0.0, 0.5, 0.0],
@@ -38,7 +91,7 @@ const spheres = {
       material: { color: [0.2, 0.9, 0.3] },
     },
 
-    ...Array.from({ length: 36 }, (_, i) => ({
+    ...Array.from({ length: 36 }, (_, i): SphereMeshDecl => ({
       type: 'sphere',
       center: [
         ((i % 6) - 2.5) * 2.0,
@@ -63,7 +116,7 @@ const spheres = {
   maxBounces: 8,
 };
 
-const cornell = {
+const cornell: SceneConfig = {
   camera: {
 
     position: [2.78, 2.73, -8.0],
@@ -111,7 +164,7 @@ const cornell = {
   maxBounces: 8,
 };
 
-const sponza = {
+const sponza: SceneConfig = {
   camera: {
 
     position: [6.0, 1.0, 0.0],
@@ -136,7 +189,7 @@ const sponza = {
   load: () => loadSponzaTriangles('sponza/Sponza.gltf'),
 };
 
-export function autoGltfSceneConfig(tris) {
+export function autoGltfSceneConfig(tris: Triangle[]): SceneConfig {
 
   const mn = [Infinity, Infinity, Infinity];
   const mx = [-Infinity, -Infinity, -Infinity];
@@ -160,7 +213,7 @@ export function autoGltfSceneConfig(tris) {
   return {
     camera: {
       position: [center[0], center[1] + radius * 0.4, center[2] + camDist],
-      target: center,
+      target: center as [number, number, number],
       fov: 60,
 
       near: camDist * 0.1,
@@ -192,7 +245,7 @@ const GLTF_SCENES = [
   { name: 'boombox', file: 'gltf/BoomBox/glTF/BoomBox.gltf' },
 ];
 
-const gltfSceneEntries = Object.fromEntries(GLTF_SCENES.map(({ name, file }) => [name, {
+const gltfSceneEntries = Object.fromEntries(GLTF_SCENES.map(({ name, file }): [string, SceneConfig] => [name, {
   camera: { position: [0, 0, 5], target: [0, 0, 0], fov: 60 },
   background: [0.01, 0.01, 0.03],
   meshes: [],
@@ -200,9 +253,9 @@ const gltfSceneEntries = Object.fromEntries(GLTF_SCENES.map(({ name, file }) => 
   lightQuads: [],
   maxBounces: 8,
   load: async () => {
-    const { tris, texImages } = await loadGltfTriangles(file);
+    const { tris, texImages } = await loadGltfTriangles(`/${file}`);
     return { tris, texImages, scene: autoGltfSceneConfig(tris) };
   },
 }]));
 
-export const scenes = { cornell, spheres, sponza, ...gltfSceneEntries };
+export const scenes: Record<string, SceneConfig> = { cornell, spheres, sponza, ...gltfSceneEntries };

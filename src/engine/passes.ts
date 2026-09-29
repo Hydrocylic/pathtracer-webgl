@@ -1,8 +1,8 @@
 
 import * as THREE from 'three';
-import vertShader from '@core/shaders/fullscreen.vert.glsl?raw';
-import fragShader from '@core/shaders/pathtrace.frag.glsl?raw';
-import compositeFrag from '@core/shaders/composite.frag.glsl?raw';
+import vertShader from '../kernel/shaders/fullscreen.vert.glsl?raw';
+import fragShader from '../kernel/shaders/pathtrace.frag.glsl?raw';
+import compositeFrag from '../kernel/shaders/composite.frag.glsl?raw';
 import type { UniformsTable } from './uniforms';
 
 export interface Passes {

@@ -1,8 +1,8 @@
 
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
-import { loadGltfTriangles } from '@core/scene/sponza-loader.js';
-import { autoGltfSceneConfig } from '@core/scene.js';
+import { loadGltfTriangles } from '../kernel/scene/sponza-loader';
+import { autoGltfSceneConfig } from '../kernel/scene';
 import { createSceneRegistry, capTris, type SceneRegistry } from './scenes';
 import { makeBundle, type SceneBundle } from './bundle';
 import { createUniforms, type UniformsTable } from './uniforms';
@@ -244,7 +244,7 @@ export class PathTracerEngine {
   async loadGltfScene(wantsGltf: string): Promise<void> {
     this.pendingScene = 'gltf';
 
-    const { tris, texImages } = await loadGltfTriangles(`/${wantsGltf}`);
+    const { tris, texImages } = await loadGltfTriangles(wantsGltf);
     const sceneConfig = autoGltfSceneConfig(tris);
     const bundle = makeBundle(sceneConfig, capTris(tris, sceneConfig), texImages);
     this.registry.bundles.gltf = bundle;

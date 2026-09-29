@@ -1,9 +1,9 @@
 
 import * as THREE from 'three';
-import { scenes as kernelScenes } from '@core/scene.js';
-import type { SceneConfig } from '@core/scene.js';
-import { materializeTriangles } from '@core/renderer/bvh.js';
-import type { Triangle } from '@core/renderer/bvh.js';
+import { scenes as kernelScenes } from '../kernel/scene';
+import type { SceneConfig } from '../kernel/scene';
+import { materializeTriangles } from '../kernel/renderer/bvh';
+import type { Triangle } from '../kernel/renderer/bvh';
 import { makeBundle, type SceneBundle } from './bundle';
 import { productProfile, type ProductProfile } from './product-profile';
 
